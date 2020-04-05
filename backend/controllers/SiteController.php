@@ -1,6 +1,8 @@
 <?php
 namespace backend\controllers;
 
+use backend\models\Apple;
+use backend\models\SettingsType;
 use Yii;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
@@ -26,7 +28,7 @@ class SiteController extends Controller
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['logout', 'index'],
+                        'actions' => ['logout', 'generate','index'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -41,9 +43,6 @@ class SiteController extends Controller
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function actions()
     {
         return [
@@ -53,21 +52,27 @@ class SiteController extends Controller
         ];
     }
 
-    /**
-     * Displays homepage.
-     *
-     * @return string
-     */
+    public function actionGenerate()
+    {
+        $lock_delete = 1;
+        $apples = [];
+
+        return $this->render('index', [
+            // Можно и всё сразу выводить со справочника, но если будут добавляться новые объекты, то лишний данные придётся перебирать.
+            // разумней считаю делать строгую выорку по объекту
+            'colors_apple' => SettingsType::find()->where(['object_name'=>'color_apple'])->all(),
+            'states_apple' => SettingsType::find()->where(['object_name'=>'state_apple'])->all(),
+            'count_apples' => Apple::find()->count(),
+            'lock_delete' => $lock_delete,
+            'apples' => $apples,
+        ]);
+    }
+
     public function actionIndex()
     {
         return $this->render('index');
     }
 
-    /**
-     * Login action.
-     *
-     * @return string
-     */
     public function actionLogin()
     {
         if (!Yii::$app->user->isGuest) {

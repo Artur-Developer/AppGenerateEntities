@@ -28,19 +28,19 @@ class m200405_021107_create_refs_settings_table extends Migration
             // states
             [
                 'object_name' => 'state_apple',
-                'title' => 'яблоко на дереве',
+                'title' => 'на дереве',
                 'code' => 'on_tree',
                 'value' => 'on_tree',
             ],
             [
                 'object_name' => 'state_apple',
-                'title' => 'яблоко упало с дерева',
+                'title' => 'упало с дерева',
                 'code' => 'down',
                 'value' => 'down',
             ],
             [
                 'object_name' => 'state_apple',
-                'title' => 'яблоко испорчено',
+                'title' => 'испорчено',
                 'code' => 'rotten',
                 'value' => 'rotten',
             ],
