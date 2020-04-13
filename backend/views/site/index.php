@@ -3,7 +3,7 @@
 use \yii\helpers\Url;
 use \backend\models\Apple;
 
-$this->title = '';
+$this->title = 'Generate apple';
 
 $this->registerCssFile('@web/css/page_apples.css', [
     'depends' => ['yii\web\YiiAsset']
@@ -67,7 +67,7 @@ $this->registerJsFile('@web/js/jquery.mask.min.js', [
         </div>
     </div>
     <div class="clearfix"></div>
-    <?php if($count_apples > -1):?>
+    <?php if($count_apples > 0):?>
         <div class="container-fuild row">
             <div class="col-md-12">
                 <p>Всего яблок : <?= $count_apples ?></p>
@@ -101,7 +101,7 @@ $this->registerJsFile('@web/js/jquery.mask.min.js', [
     <?php endif;?>
     <!-- Apple list -->
     <div class="container row apple_list">
-        <?php if(count($apples) > 0): ?>
+        <?php if($apples): ?>
             <?php foreach ($apples as $key_apple => $apple):?>
                 <!-- Apple item -->
                 <div class="col-xs-2 col-md-1 col-lg-1 item_apple">
