@@ -3,8 +3,6 @@
 namespace backend\models;
 
 use Yii;
-use yii\base\Exception;
-use \DateTime;
 
 /**
  * This is the model class for table "apple".
@@ -40,8 +38,6 @@ class Apple extends \yii\db\ActiveRecord
             [['color', 'date_show'], 'required'],
             [['color', 'state', 'date_show', 'date_down', 'size'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
-            [['color'], 'unique'],
-            [['state'], 'unique'],
             [['color'], 'exist', 'skipOnError' => true, 'targetClass' => SettingsType::className(), 'targetAttribute' => ['color' => 'id']],
             [['state'], 'exist', 'skipOnError' => true, 'targetClass' => SettingsType::className(), 'targetAttribute' => ['state' => 'id']],
         ];
@@ -71,63 +67,62 @@ class Apple extends \yii\db\ActiveRecord
         return $this->hasOne(SettingsType::className(), ['id' => 'state']);
     }
 
-    public function randDateInRange(DateTime $start, DateTime $end) {
-        $randomTimestamp = mt_rand($start->getTimestamp(), $end->getTimestamp());
-        $randomDate = new DateTime();
-        $randomDate->setTimestamp($randomTimestamp);
-        return $randomDate;
+    public function buildInsert(array $colors, int $state): array
+    {
+        return [
+            'color' => SettingsType::randColor($colors),
+            'date_show' => SettingsType::randTimeStamp(),
+            'size' => self::DEFAULT_SIZE,
+            'state' => $state
+        ];
     }
 
-    public function randDate() {
-        $randomDate = new DateTime();
-        $randomDate->setTimestamp(time() - rand(10,1000));
-        return $randomDate->getTimestamp();
+    public function getSize(): float
+    {
+        return round($this->size / 100, 2);
     }
 
-    public function randColor(){
-        $colors = SettingsType::find()->where(['object_name'=>'color_apple'])->asArray()->all();
-        return $colors[array_rand($colors)];
-    }
-
-    public function eat(){
-        if($this->state == self::STATE_ON_TREE){
+    public function eat(int $id)
+    {
+        $apple = self::findOne($id);
+        if($apple->state == SettingsType::getStateApple(self::STATE_ON_TREE)){
 //            throw new Exception('Съесть нельзя, яблоко на дереве');
             return 'Съесть нельзя, яблоко на дереве';
         }
-        if ($this->size !== 0){
-            $this->size - self::DEFAULT_EAT;
-            if ($this->size === 0){
-                $this->delete();
+        if ($apple->size !== 0){
+            $apple->size -= self::DEFAULT_EAT;
+            if ($apple->size === 0){
+                $apple->delete();
             }
-            return $this->save();
+            return $apple->save();
         }
         return false;
     }
 
-    public function setRotten(){
-        $this->state = self::STATE_ROTTEN;
+    public function setRotten()
+    {
+        $this->state = SettingsType::getStateApple(self::STATE_ROTTEN);
         return $this->save();
     }
 
-    public function getSize(){
-        return $this->size / 100;
-    }
-
-    public function delete(){
+    public function delete()
+    {
         return $this->delete();
     }
 
-    public function fallToGround(){
-        $this->state = self::STATE_DOWN;
+    public function fallToGround()
+    {
+        $this->state = SettingsType::getStateApple(self::STATE_DOWN);
         return $this->save();
     }
 
-    public function createApple(){
-        $this->color = $this->randColor();
-        $this->date_show = $this->randDate(); // сделать случайным !!!
+    public function createApple()
+    {
+        $this->color = SettingsType::randColor(SettingsType::getColors());
+        $this->date_show = SettingsType::randTimeStamp();
         $this->size = self::DEFAULT_SIZE;
-        $this->state = self::STATE_ON_TREE;
-        return $this->save();
+        $this->state = SettingsType::getStateApple(self::STATE_ON_TREE);
+        $this->save();
     }
 
 }

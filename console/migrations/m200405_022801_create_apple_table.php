@@ -29,8 +29,7 @@ class m200405_022801_create_apple_table extends Migration
         $this->createIndex(
             'idx-'.$this->table_name.'-state-'.SettingsType::tableName().'-id',
             $this->table_name,
-            'state',
-            TRUE
+            'state'
         );
 
         $this->addForeignKey(
@@ -46,8 +45,7 @@ class m200405_022801_create_apple_table extends Migration
         $this->createIndex(
             'idx-'.$this->table_name.'-color-'.SettingsType::tableName().'-id',
             $this->table_name,
-            'color',
-            TRUE
+            'color'
         );
 
         $this->addForeignKey(

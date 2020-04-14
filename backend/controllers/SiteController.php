@@ -2,6 +2,7 @@
 namespace backend\controllers;
 
 use backend\models\Apple;
+use backend\models\Generator;
 use backend\models\SettingsType;
 use Yii;
 use yii\web\Controller;
@@ -14,9 +15,7 @@ use common\models\LoginForm;
  */
 class SiteController extends Controller
 {
-    /**
-     * {@inheritdoc}
-     */
+
     public function behaviors()
     {
         return [
@@ -54,23 +53,44 @@ class SiteController extends Controller
 
     public function actionGenerate()
     {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $count_apple = intval(Yii::$app->request->post('count_apple'));
+        $lock_file = fopen(\Yii::getAlias('@app') . "/runtime/generate-apple-file.lock", 'w');
+        if(isset($count_apple) && is_numeric($count_apple)){
+            if (!flock($lock_file, LOCK_EX | LOCK_NB)) {
+                return "Already runninng\n";
+            }
+            $state = SettingsType::getStateApple(Apple::STATE_ON_TREE);
+            $colors = SettingsType::getColors();
+            $column_names = ['color','date_show','size','state'];
+            $apple = new Apple();
+            $generate = new Generator($apple,$column_names,$colors,$count_apple,$state);
+            $generate->buildBranches();
+        }
+
+        flock($lock_file, LOCK_UN);
+        fclose($lock_file);
+
+        return ['result' => ['generate' => 1]];
+
+    }
+
+    public function actionIndex()
+    {
         $lock_delete = 1;
         $apples = [];
+        $count_apple = Apple::find()->count();
 
         return $this->render('index', [
             // Можно и всё сразу выводить со справочника, но если будут добавляться новые объекты, то лишний данные придётся перебирать.
-            // разумней считаю делать строгую выорку по объекту
+            // разумней считаю делать строгую выборку по объекту
             'colors_apple' => SettingsType::find()->where(['object_name'=>'color_apple'])->all(),
             'states_apple' => SettingsType::find()->where(['object_name'=>'state_apple'])->all(),
             'count_apples' => Apple::find()->count(),
             'lock_delete' => $lock_delete,
             'apples' => $apples,
+            'count_apple' => $count_apple,
         ]);
-    }
-
-    public function actionIndex()
-    {
-        return $this->render('index');
     }
 
     public function actionLogin()

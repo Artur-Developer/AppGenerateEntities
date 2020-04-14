@@ -3,6 +3,7 @@
 namespace backend\models;
 
 use Yii;
+use \DateTime;
 
 /**
  * This is the model class for table "refs_settings_type".
@@ -43,5 +44,34 @@ class SettingsType extends \yii\db\ActiveRecord
             'created_at' => 'Create At',
             'updated_at' => 'Update At',
         ];
+    }
+
+    public static function getColors(): array
+    {
+        return static::find()->where(['object_name'=>'color_apple'])->asArray()->all();
+    }
+
+    public static function getStateApple($state): int
+    {
+        return static::find()->where(['object_name' => 'state_apple', 'code' => $state])->one()->id;
+    }
+
+    public function randDateInRange(DateTime $start, DateTime $end) {
+        $randomTimestamp = mt_rand($start->getTimestamp(), $end->getTimestamp());
+        $randomDate = new DateTime();
+        $randomDate->setTimestamp($randomTimestamp);
+        return $randomDate;
+    }
+
+    public static function randTimeStamp(): int
+    {
+        $randomDate = new DateTime();
+        $randomDate->setTimestamp(time() - rand(10,1000));
+        return $randomDate->getTimestamp();
+    }
+
+    public static function randColor(array $colors): int
+    {
+        return $colors[array_rand($colors)]['id'];
     }
 }
