@@ -16,7 +16,7 @@ abstract class Entities implements EntityInterface
      * $this->entities = [
      *      "Apple" => new Apple(),
      * ];
-     * $this->entity = "Apple";
+     * $this->entity git= "Apple";
      */
     public function __construct(string $entity)
     {

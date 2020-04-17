@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: vipma
- * Date: 14.04.2020
- * Time: 16:06
- */
 
 namespace backend\models;
 
@@ -12,11 +6,14 @@ use Yii;
 
 class Generator
 {
-    const DEFAULT_CNT_IN_BATCH = 500;
-    const INTERVAL_SAVE_BATCH = 1;
+    const DEFAULT_CNT_IN_BATCH = 500; // количество в партии
+    const INTERVAL_SAVE_BATCH = 1; // пауза в секундах
+    const STATUS_GENERATING = 20; // партия генерируется
+    const STATUS_GENERATED = 21; // партия сгенерировалась
 
     public $cnt_batches = 0;
     public $inserted = 0;
+    public $batch_id;
 
     protected $entity;
     protected $colors;
@@ -25,6 +22,14 @@ class Generator
     protected $batch;
     protected $count;
 
+    /**
+     * Generator constructor.
+     * @param object $entity
+     * @param array $columns
+     * @param array $colors
+     * @param int $count
+     * @param int $state
+     */
     public function __construct(object $entity, array $columns, array $colors, int $count,  int $state)
     {
         $this->entity = $entity;
@@ -34,13 +39,18 @@ class Generator
         $this->state = $state;
         $this->columns = $columns;
         $this->cnt_batches = $this->getCntBatches();
+        $this->batch_id = 1 + $entity->getLastBatch();
     }
 
+    /**
+     * @param int $count
+     * function generate entity in db to 100 item
+     */
     private function generate(int $count)
     {
         $this->batch = [];
         for ($i = 1; $i <= $count; $i++){
-            $this->batch[] = array_values($this->entity->buildInsert($this->colors, $this->state));
+            $this->batch[] = array_values($this->entity->buildInsert($this->batch_id,$this->colors,$this->state));
             if ($i % 100 == 0){
                 $this->insertBatch();
                 unset($this->batch);
@@ -52,7 +62,12 @@ class Generator
         }
     }
 
-    public function buildBranches()
+    /**
+     * @return int inserted entity in db
+     * This function insert to batch
+     * You can edit size batch static::DEFAULT_CNT_IN_BATCH = 500
+     */
+    public function buildBranches(): int
     {
         while ($this->count > 0){
             if ($this->count >= static::DEFAULT_CNT_IN_BATCH) {
@@ -65,8 +80,14 @@ class Generator
                 $this->count -= $this->count;
             }
         }
+        return $this->inserted;
     }
 
+    /**
+     * @return int - status inserted
+     * 0 - error
+     * 1 - ok
+     */
     private function insertBatch(): int
     {
         sleep(static::INTERVAL_SAVE_BATCH);
@@ -77,6 +98,10 @@ class Generator
 
     }
 
+    /**
+     * @return int - count batches
+     * count_generate / batch_size = count batches
+     */
     private function getCntBatches(): int
     {
         $cnt = intdiv($this->count,static::DEFAULT_CNT_IN_BATCH);
