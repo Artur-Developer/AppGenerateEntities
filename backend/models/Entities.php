@@ -16,12 +16,12 @@ abstract class Entities implements EntityInterface
      * $this->entities = [
      *      "Apple" => new Apple(),
      * ];
-     * $this->entity git= "Apple";
+     * $this->entity = "Apple";
      */
     public function __construct(string $entity)
     {
         $this->entities = [];
-        $this->entity = new class{};
+        $this->entity = $this->entities[$entity];
     }
 
     /**
@@ -29,9 +29,9 @@ abstract class Entities implements EntityInterface
      * @return object
      * example "Apple" = new Apple()
      */
-    public function getEntity(string $entity): object
+    public function getEntity(): object
     {
-        return $this->entities[$entity];
+        return $this->entity;
     }
 
     /**

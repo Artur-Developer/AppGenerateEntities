@@ -12,6 +12,6 @@ class EntityFruit extends Entities
         $this->entities = [
             static::$apple => new Apple()
         ];
-        $this->entity = $this->getEntity($entity);
+        $this->entity = $this->entities[$entity];
     }
 }

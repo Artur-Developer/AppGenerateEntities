@@ -4,7 +4,7 @@ namespace backend\models\interfaces;
 
 interface EntityInterface
 {
-    public function getEntity(string $entity): object;
+    public function getEntity(): object;
 
     public function deleteEntityToBatches();
 
