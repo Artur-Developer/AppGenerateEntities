@@ -86,6 +86,4 @@ abstract class Entities implements EntityInterface
     {
         return $this->getSettingValue(SettingsType::PARAMS_STATE);
     }
-
-
 }
