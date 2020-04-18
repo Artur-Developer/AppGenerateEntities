@@ -21,11 +21,6 @@ use Yii;
  */
 class Apple extends \yii\db\ActiveRecord
 {
-    const DEFAULT_SIZE = 100;
-    const DEFAULT_EAT = 25;
-    const STATE_ON_TREE = 'on_tree';
-    const STATE_DOWN = 'down';
-    const STATE_ROTTEN = 'rotten';
 
     public static function tableName()
     {
@@ -35,8 +30,8 @@ class Apple extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['color', 'date_show'], 'required'],
-            [['color', 'state', 'date_show', 'date_down', 'size'], 'integer'],
+            [['color', 'date_show', 'batch'], 'required'],
+            [['color', 'state', 'date_show', 'date_down', 'size', 'batch'], 'integer'],
             [['created_at', 'updated_at'], 'safe'],
             [['color'], 'exist', 'skipOnError' => true, 'targetClass' => SettingsType::className(), 'targetAttribute' => ['color' => 'id']],
             [['state'], 'exist', 'skipOnError' => true, 'targetClass' => SettingsType::className(), 'targetAttribute' => ['state' => 'id']],
@@ -49,11 +44,26 @@ class Apple extends \yii\db\ActiveRecord
             'id' => 'ID',
             'color' => 'Color',
             'state' => 'State',
+            'batch' => 'Batch',
             'date_show' => 'Date Show',
             'date_down' => 'Date Down',
             'size' => 'Size',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
+        ];
+    }
+
+    public static function getEntityInfo(): array
+    {
+        return [
+            'class' => self::className(),
+            'entity' => ucfirst(self::tableName()),
+            'last_batch' => SettingsType::getLastBatch(
+                new self()
+            ),
+            'entity_ru' => 'яблоки',
+            'singular_ru' => 'яблоко',
+            'plural_ru' => 'яблок'
         ];
     }
 
@@ -67,61 +77,28 @@ class Apple extends \yii\db\ActiveRecord
         return $this->hasOne(SettingsType::className(), ['id' => 'state']);
     }
 
-    public function buildInsert(array $colors, int $state): array
+    public function getLastBatch(): int
+    {
+        return intval($this->find()->select('batch')->max('batch'));
+    }
+
+    public function buildInsert(int $batch_id, array $colors, int $state): array
     {
         return [
             'color' => SettingsType::randColor($colors),
             'date_show' => SettingsType::randTimeStamp(),
-            'size' => self::DEFAULT_SIZE,
-            'state' => $state
+            'size' => SettingsType::DEFAULT_ENTITY_SIZE,
+            'state' => $state,
+            'batch' => $batch_id
         ];
-    }
-
-    public function getSize(): float
-    {
-        return round($this->size / 100, 2);
-    }
-
-    public function eat(int $id)
-    {
-        $apple = self::findOne($id);
-        if($apple->state == SettingsType::getStateApple(self::STATE_ON_TREE)){
-//            throw new Exception('Съесть нельзя, яблоко на дереве');
-            return 'Съесть нельзя, яблоко на дереве';
-        }
-        if ($apple->size !== 0){
-            $apple->size -= self::DEFAULT_EAT;
-            if ($apple->size === 0){
-                $apple->delete();
-            }
-            return $apple->save();
-        }
-        return false;
-    }
-
-    public function setRotten()
-    {
-        $this->state = SettingsType::getStateApple(self::STATE_ROTTEN);
-        return $this->save();
-    }
-
-    public function delete()
-    {
-        return $this->delete();
-    }
-
-    public function fallToGround()
-    {
-        $this->state = SettingsType::getStateApple(self::STATE_DOWN);
-        return $this->save();
     }
 
     public function createApple()
     {
         $this->color = SettingsType::randColor(SettingsType::getColors());
         $this->date_show = SettingsType::randTimeStamp();
-        $this->size = self::DEFAULT_SIZE;
-        $this->state = SettingsType::getStateApple(self::STATE_ON_TREE);
+        $this->size = SettingsType::DEFAULT_ENTITY_SIZE;
+        $this->state = SettingsType::getState(SettingsType::STATE_ON_TREE);
         $this->save();
     }
 

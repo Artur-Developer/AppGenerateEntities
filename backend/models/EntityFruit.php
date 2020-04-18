@@ -14,4 +14,15 @@ class EntityFruit extends Entities
         ];
         $this->entity = $this->entities[$entity];
     }
+
+    public function setRotten()
+    {
+        return $this->changeState(SettingsType::STATE_ROTTEN);
+    }
+
+    public function fallToGround()
+    {
+        return $this->changeState(SettingsType::STATE_DOWN);
+    }
+
 }

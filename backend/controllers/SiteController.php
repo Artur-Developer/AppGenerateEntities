@@ -2,9 +2,11 @@
 namespace backend\controllers;
 
 use backend\models\Apple;
+use backend\models\EntityFruit;
 use backend\models\Generator;
 use backend\models\SettingsType;
 use Yii;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
@@ -27,7 +29,12 @@ class SiteController extends Controller
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['logout', 'generate','index'],
+                        'actions' => [
+                            'logout',
+                            'generate',
+                            'index',
+                            'delete-entity-data',
+                        ],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -51,45 +58,89 @@ class SiteController extends Controller
         ];
     }
 
+    public function actionDeleteEntityData()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $entity_name = Yii::$app->request->post('entity');
+        if (isset($entity_name) && $this->checkEntityExists($entity_name)){
+            $entity = new EntityFruit($entity_name);
+//            $count = $entity->deleteEntityToBatches();
+            $count = $entity->getEntity()->deleteAll();
+            return $count == 0 ?: ['result' => ['status' => true]];
+        }
+        return ['result' => ['status' => false]];
+    }
+
     public function actionGenerate()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $count_apple = intval(Yii::$app->request->post('count_apple'));
-        $lock_file = fopen(\Yii::getAlias('@app') . "/runtime/generate-apple-file.lock", 'w');
-        if(isset($count_apple) && is_numeric($count_apple)){
-            if (!flock($lock_file, LOCK_EX | LOCK_NB)) {
-                return "Already runninng\n";
-            }
-            $state = SettingsType::getStateApple(Apple::STATE_ON_TREE);
+        $entity = Yii::$app->request->post('entity');
+        $count_entity = Yii::$app->request->post('count');
+        $batch_id = Yii::$app->request->post('batch_id');
+
+        if (isset($entity) && $this->checkEntityExists($entity)
+            && isset($count_entity) && is_numeric($count_entity)
+        ) {
+            $batch_id = isset($batch_id) && is_numeric($count_entity) ? intval($batch_id) : 0;
+            $entity_fruit = new EntityFruit($entity);
+            $entity = $entity_fruit->getEntity();
+            $state = SettingsType::getState(SettingsType::STATE_ON_TREE);
             $colors = SettingsType::getColors();
-            $column_names = ['color','date_show','size','state'];
-            $apple = new Apple();
-            $generate = new Generator($apple,$column_names,$colors,$count_apple,$state);
-            $generate->buildBranches();
+            $column_names = ['color','date_show','size','state','batch'];
+            $generate = new Generator($entity,$column_names,$colors,$count_entity,$state,$batch_id);
+            $inserted = $generate->buildBranches();
+        }
+        else {
+            $result =  ['result' => ['status' => SettingsType::INVALID_PARAMS]];
         }
 
-        flock($lock_file, LOCK_UN);
-        fclose($lock_file);
+        return isset($result)
+            ? $result
+            : [
+                'result' => [
+                'status' => Generator::STATUS_GENERATED,
+                'inserted' => isset($inserted) ? $inserted : 0,
+                'check_inserted' => intval($entity->find()->where(['batch' => $batch_id])->count())
+            ]
+        ];
+    }
 
-        return ['result' => ['generate' => 1]];
+    public function actionEat()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $entity = Yii::$app->request->post('entity');
+        $id = Yii::$app->request->post('id');
 
+        if (isset($entity) && $this->checkEntityExists($entity)
+            && isset($id) && is_numeric($id)
+        ){
+            $entity = new EntityFruit($entity);
+            $entity->findEntity($id);
+            if ($entity->eat()){
+                $result = ['result' => [
+                    'id' => $entity->getFoundObject()->id,
+                    'size' => $entity->getSize()
+                    ]
+                ];
+            }
+        }
+
+        return isset($result)
+            ? $result
+            : [
+                'result' => [
+                    'status' => SettingsType::INVALID_PARAMS,
+                    'inserted' => isset($inserted) ? $inserted : 0
+                ]
+            ];
     }
 
     public function actionIndex()
     {
-        $lock_delete = 1;
-        $apples = [];
-        $count_apple = Apple::find()->count();
-
         return $this->render('index', [
-            // Можно и всё сразу выводить со справочника, но если будут добавляться новые объекты, то лишний данные придётся перебирать.
-            // разумней считаю делать строгую выборку по объекту
-            'colors_apple' => SettingsType::find()->where(['object_name'=>'color_apple'])->all(),
-            'states_apple' => SettingsType::find()->where(['object_name'=>'state_apple'])->all(),
-            'count_apples' => Apple::find()->count(),
-            'lock_delete' => $lock_delete,
-            'apples' => $apples,
-            'count_apple' => $count_apple,
+            'colors' => ArrayHelper::index(SettingsType::find()->where(['object_name'=>'color_apple'])->all(),'id'),
+            'states' => ArrayHelper::index(SettingsType::find()->where(['object_name'=>'state_apple'])->all(),'id'),
+            'entities' => $this->getEntitiesInfo(),
         ]);
     }
 
@@ -103,23 +154,30 @@ class SiteController extends Controller
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
             return $this->goBack();
         } else {
-            $model->password = '';
-
             return $this->render('login', [
                 'model' => $model,
             ]);
         }
     }
 
-    /**
-     * Logout action.
-     *
-     * @return string
-     */
     public function actionLogout()
     {
         Yii::$app->user->logout();
 
         return $this->goHome();
+    }
+
+    protected function getEntitiesInfo()
+    {
+        return SettingsType::getEntitiesInfo();
+    }
+
+    protected function checkEntityExists($entity)
+    {
+        $entity = new EntityFruit($entity);
+        if (is_object($entity->getEntity())){
+            return true;
+        }
+        return false;
     }
 }

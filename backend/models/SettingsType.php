@@ -4,6 +4,7 @@ namespace backend\models;
 
 use Yii;
 use \DateTime;
+use backend\models\Apple;
 
 /**
  * This is the model class for table "refs_settings_type".
@@ -18,6 +19,25 @@ use \DateTime;
  */
 class SettingsType extends \yii\db\ActiveRecord
 {
+    const PARAMS_STATE = 'state';
+    const PARAMS_COLOR = 'color';
+
+    const ACTION_DOWN = 'down';
+    const ACTION_ROTTEN = 'rotten';
+    const ACTION_EAT = 'eat';
+
+    const INVALID_PARAMS = 403;
+    const ENTITIES_PATH = 'backend\models\\';
+
+    const DEFAULT_ENTITY_SIZE = 100;
+    const DEFAULT_ENTITY_EAT = 25;
+
+    const STATE_ON_TREE = 'on_tree';
+    const STATE_DOWN = 'down';
+    const STATE_ROTTEN = 'rotten';
+
+    const PATH_GENERATE_FILE_LOCK =  "/runtime/generate-file.lock";
+
     public static function tableName()
     {
         return 'refs_settings_type';
@@ -51,9 +71,26 @@ class SettingsType extends \yii\db\ActiveRecord
         return static::find()->where(['object_name'=>'color_apple'])->asArray()->all();
     }
 
-    public static function getStateApple($state): int
+    public static function getState($state): int
     {
         return static::find()->where(['object_name' => 'state_apple', 'code' => $state])->one()->id;
+    }
+
+    public static function getLastBatch($entity): int
+    {
+        return intval($entity::find()->select('batch')->max('batch'));
+    }
+
+    public static function getEntitiesInfo(): array
+    {
+        return [
+            Apple::getEntityInfo(),
+        ];
+    }
+
+    public static function getPathGenerateLockFile(): string
+    {
+        return Yii::getAlias('@backend') . static::PATH_GENERATE_FILE_LOCK;
     }
 
     public function randDateInRange(DateTime $start, DateTime $end) {

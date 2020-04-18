@@ -6,6 +6,7 @@ use Yii;
 
 class Generator
 {
+    const MAX_CNT_IN_BATCH = 10000; // количество в партии
     const DEFAULT_CNT_IN_BATCH = 500; // количество в партии
     const INTERVAL_SAVE_BATCH = 1; // пауза в секундах
     const STATUS_GENERATING = 20; // партия генерируется
@@ -30,7 +31,7 @@ class Generator
      * @param int $count
      * @param int $state
      */
-    public function __construct(object $entity, array $columns, array $colors, int $count,  int $state)
+    public function __construct(object $entity, array $columns, array $colors, int $count,  int $state, int $batch_id = 0)
     {
         $this->entity = $entity;
         $this->count = $count;
@@ -39,7 +40,7 @@ class Generator
         $this->state = $state;
         $this->columns = $columns;
         $this->cnt_batches = $this->getCntBatches();
-        $this->batch_id = 1 + $entity->getLastBatch();
+        $this->batch_id = $batch_id == 0 ? 1 + $entity->getLastBatch() : $batch_id;
     }
 
     /**
@@ -90,7 +91,7 @@ class Generator
      */
     private function insertBatch(): int
     {
-        sleep(static::INTERVAL_SAVE_BATCH);
+//        sleep(static::INTERVAL_SAVE_BATCH);
         return Yii::$app->db->createCommand()
             ->batchInsert(
                 $this->table_name, $this->columns, $this->batch

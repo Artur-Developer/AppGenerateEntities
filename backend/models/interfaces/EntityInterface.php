@@ -9,4 +9,8 @@ interface EntityInterface
     public function deleteEntityToBatches();
 
     public function getSettingValue(string $setting): array;
+
+    public function findEntity(int $id): object;
+
+    public function changeState(string $state);
 }

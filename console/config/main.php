@@ -20,6 +20,10 @@ return [
             'class' => 'yii\console\controllers\FixtureController',
             'namespace' => 'common\fixtures',
           ],
+        'socketio' => [
+            'class' => \yiicod\socketio\commands\SocketIoCommand::class,
+            'server' => 'localhost:1367'
+        ],
     ],
     'components' => [
         'log' => [
