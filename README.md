@@ -93,3 +93,8 @@ public function __construct(string $entity)
 
 ##### models SettingsType
 ###### If you need to add your parameter to work just create it at backend/web/settings
+
+#### If you need to check the rotten of apples, add the yii entity/set-rottens script every 30 minutes on the cron
+```bash
+    php yii entity/set-rottens
+```
