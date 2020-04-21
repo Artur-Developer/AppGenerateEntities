@@ -30,6 +30,7 @@ $(document).ready(function() {
             count_apple -= limit_cnt_in_batch
         } else {
             tmp_count = count_apple;
+            count_apple -= count_apple;
         }
         $.post({
             url: ajax_request_url['start_generate'],
@@ -42,8 +43,8 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.result.status == generate_params['status_generated']){
                     genereted_count += parseInt(response.result.inserted);
-                    progress_bar_value += cnt_batch_item;
-                    progress_bar_value = progress_bar_value > 100 || progress_bar_value >= 93 ? 100 : progress_bar_value;
+                    progress_bar_value = (parseFloat(progress_bar_value) + parseFloat(cnt_batch_item)).toFixed(1);
+                    progress_bar_value = progress_bar_value > 100 || progress_bar_value >= 97 ? 100 : progress_bar_value;
                     var text_progress_bar = 'Сгенерировано (' + genereted_count + ')   ' + progress_bar_value + "%";
                     text_progress_bar = progress_bar_value > 20 ? text_progress_bar : progress_bar_value + "%";
                     $(".progress-bar").text(text_progress_bar)
@@ -54,7 +55,7 @@ $(document).ready(function() {
                 throw new Error(response);
             }
         }).done(function() {
-            if ((progress_bar_value >= 93 && progress_bar_value <= 100) || progress_bar_value > 100) {
+            if ((progress_bar_value >= 97 && progress_bar_value <= 100) || progress_bar_value > 100) {
                 $(".progress-bar").text("100%").attr("aria-valuenow", "100").css("width", "100%").text('Генерация завершена');
                 $(".block_progress_bar").removeClass("active");
                 $("#generate").children(".glyphicon-play").show().siblings(".span_generate_loader").hide();
@@ -62,9 +63,10 @@ $(document).ready(function() {
                 if (progress_bar_value == 100){
                     setTimeout(function () {
                         location.reload();
-                    }, 2800);
+                    }, 3000);
                 }
-            } else {
+            }
+            if (count_apple > 0){
                 send_batch_generate(count_apple, cnt_batch_item, batch_id);
             }
         })
@@ -87,35 +89,40 @@ $(document).ready(function() {
 
     // event start generate after click button
     $(document).on("click", "#generate", function () {
-        if (start_generate === false){
+        var limit_count = true;
+        if (parseInt(count_apple_input.val().trim().replace(/\s+/g, '')) >= 1000000
+            && !confirm('Вы уверены, что хотите сгенерировать указанное количество?')
+        ){
+            limit_count = false;
+        }
+        if (limit_count === true && start_generate === false){
             $(this).children(".glyphicon-play").hide();
             $(this).children(".span_generate_loader").show();
             start_generate = true;
             genereted_count = 0;
             $(".block_progress_bar").addClass("active").show().fadeIn(3000);
-            $(this).attr("disabled",true);
-            $("#delete_all_apples").attr("disabled",true);
-            count_apple_input.attr("disabled",true);
+            $(this).attr("disabled", true);
+            $("#delete_all_apples").attr("disabled", true);
+            count_apple_input.attr("disabled", true);
             progress_bar_value = 1;
 
             var cnt_batch_item,
                 last_batch_id = $("#last_batch_id_" + getEntity()).attr('last_batch_id'),
-                count_apple = count_apple_input.val().replace(' ',''),
+                count_apple = parseInt(count_apple_input.val().trim().replace(/\s+/g, '')),
                 cnt_batches = Math.floor(count_apple / parseInt(generate_params['cnt_in_batch']));
 
             cnt_batches = cnt_batches == 0 ? 1 : cnt_batches;
-            cnt_batch_item = Math.floor(100 / cnt_batches);
+            cnt_batch_item = parseFloat((100 / cnt_batches).toFixed(2));
             last_batch_id = last_batch_id > 0 ? last_batch_id : 1;
 
-            send_batch_generate(count_apple,cnt_batch_item,last_batch_id);
+            send_batch_generate(count_apple, cnt_batch_item, last_batch_id);
         }
     });
 
     // check input value, It's count input generate entity validator
     $(document).on(".count_apple input",function(ev){
         var len_count_input = $(".count_apple input");
-        var val = $(ev.target).val().trim().replace(' ','');
-        console.log(parseInt(val.substr(0,1)));
+        var val = $(ev.target).val().trim().replace(/\s+/g, '');
         if (val != '' && parseInt(val.substr(0,1)) != 0 && parseInt(val) > 0){
             $("#generate").removeAttr('disabled');
             $(this).find(".label-danger").text('').css("display", "none");
@@ -149,7 +156,7 @@ $(document).ready(function() {
                         parent_elem.parents(".item_apple").addClass("item_apple_action");
                         setTimeout(function () {
                             location.reload();
-                        }, 2000);
+                        }, 1000);
                     }
                 },
                 error: function (response) {
@@ -178,9 +185,7 @@ $(document).ready(function() {
                 },
                 success: function (response) {
                     parent_elem.parent("div").siblings(".item_info").find("b:nth-child(2) span").text(response.result.state_title);
-                    setTimeout(function () {
-                        location.reload();
-                    }, 1000);
+                    location.reload();
                 },
                 error: function (response) {
                     alert('Ошибка сервера');
