@@ -6,6 +6,7 @@ use backend\models\EntityFruit;
 use backend\models\Generator;
 use backend\models\SettingsType;
 use Yii;
+use yii\data\Pagination;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
@@ -34,6 +35,8 @@ class SiteController extends Controller
                             'generate',
                             'index',
                             'delete-entity-data',
+                            'eat-entity',
+                            'drop-entity',
                         ],
                         'allow' => true,
                         'roles' => ['@'],
@@ -62,10 +65,10 @@ class SiteController extends Controller
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $entity_name = Yii::$app->request->post('entity');
-        if (isset($entity_name) && $this->checkEntityExists($entity_name)){
+        if (isset($entity_name)){
             $entity = new EntityFruit($entity_name);
-//            $count = $entity->deleteEntityToBatches();
             $count = $entity->getEntity()->deleteAll();
+//            $count = $entity->deleteEntityToBatches();
             return $count == 0 ?: ['result' => ['status' => true]];
         }
         return ['result' => ['status' => false]];
@@ -78,10 +81,9 @@ class SiteController extends Controller
         $count_entity = Yii::$app->request->post('count');
         $batch_id = Yii::$app->request->post('batch_id');
 
-        if (isset($entity) && $this->checkEntityExists($entity)
-            && isset($count_entity) && is_numeric($count_entity)
+        if (isset($entity) && isset($count_entity) && $count_entity > 0
         ) {
-            $batch_id = isset($batch_id) && is_numeric($count_entity) ? intval($batch_id) : 0;
+            $batch_id = isset($batch_id) ? intval($batch_id) : 0;
             $entity_fruit = new EntityFruit($entity);
             $entity = $entity_fruit->getEntity();
             $state = SettingsType::getState(SettingsType::STATE_ON_TREE);
@@ -105,15 +107,13 @@ class SiteController extends Controller
         ];
     }
 
-    public function actionEat()
+    public function actionEatEntity()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $entity = Yii::$app->request->post('entity');
         $id = Yii::$app->request->post('id');
 
-        if (isset($entity) && $this->checkEntityExists($entity)
-            && isset($id) && is_numeric($id)
-        ){
+        if (isset($entity) && isset($id) && $id > 0){
             $entity = new EntityFruit($entity);
             $entity->findEntity($id);
             if ($entity->eat()){
@@ -130,17 +130,60 @@ class SiteController extends Controller
             : [
                 'result' => [
                     'status' => SettingsType::INVALID_PARAMS,
-                    'inserted' => isset($inserted) ? $inserted : 0
+                ]
+            ];
+    }
+
+    public function actionDropEntity()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $entity = Yii::$app->request->post('entity');
+        $id = Yii::$app->request->post('id');
+
+        if (isset($entity) && isset($id) && $id > 0){
+            $entity = new EntityFruit($entity);
+            $entity->findEntity($id);
+            if ($entity->fallToGround()){
+                $result = ['result' => [
+                    'id' => $entity->getFoundObject()->id,
+                    'state_id' => $entity->getFoundObject()->state,
+                    'state_code' => $entity->getFoundObject()->_state->code,
+                    'state_title' => $entity->getFoundObject()->_state->title
+                    ]
+                ];
+            }
+        }
+
+        return isset($result)
+            ? $result
+            : [
+                'result' => [
+                    'status' => SettingsType::INVALID_PARAMS,
                 ]
             ];
     }
 
     public function actionIndex()
     {
+        $entity = Yii::$app->request->get('entity');
+        if (!isset($entity)) {
+            $entity = EntityFruit::$apple;
+        }
+        $entity = new EntityFruit($entity);
+        $query = $entity->getEntity()->find();
+        $pages = new Pagination(['totalCount' => $query->count()]);
+        $entity_data = $query->offset($pages->offset)
+            ->limit(50)
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+
         return $this->render('index', [
             'colors' => ArrayHelper::index(SettingsType::find()->where(['object_name'=>'color_apple'])->all(),'id'),
             'states' => ArrayHelper::index(SettingsType::find()->where(['object_name'=>'state_apple'])->all(),'id'),
             'entities' => $this->getEntitiesInfo(),
+            'current_entity' => $entity->getEntity(),
+            'pages' => $pages,
+            'entity_data' => $entity_data,
         ]);
     }
 
@@ -170,14 +213,5 @@ class SiteController extends Controller
     protected function getEntitiesInfo()
     {
         return SettingsType::getEntitiesInfo();
-    }
-
-    protected function checkEntityExists($entity)
-    {
-        $entity = new EntityFruit($entity);
-        if (is_object($entity->getEntity())){
-            return true;
-        }
-        return false;
     }
 }

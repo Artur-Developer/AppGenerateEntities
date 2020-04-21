@@ -8,11 +8,10 @@ class EntityFruit extends Entities
 
     public function __construct(string $entity)
     {
-        parent::__construct($entity);
-        $this->entities = [
+        $entities = [
             static::$apple => new Apple()
         ];
-        $this->entity = $this->entities[$entity];
+        parent::__construct($entities,$entity);
     }
 
     public function setRotten()

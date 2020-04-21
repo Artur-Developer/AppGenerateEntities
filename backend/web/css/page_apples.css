@@ -5,8 +5,6 @@
     margin-top: 30px;
 }
 .apple {
-    background: green;
-    background: linear-gradient(#5bc236, #308014, #006400);
     width: 60px;
     height: 60px;
     border-radius: 35% 35% 41% 41% / 42% 42% 75% 75%;
@@ -43,7 +41,7 @@
 }
 .item_apple .apple b:nth-child(2) span {
     position: absolute;
-    bottom: 7px;
+    bottom: 10px;
     z-index: 9;
     width: 70%;
     text-align: center;
@@ -51,10 +49,10 @@
     line-height: 1;
 }
 .apple:before {
-    background: #149318;
+    background: #875521;
     content: "";
-    width: 18px;
-    height: 25px;
+    width: 16px;
+    height: 22px;
     position: absolute;
     margin: -27px 0 0 18px;
     border-radius: 57px 0;
@@ -94,4 +92,34 @@
     transform: rotate(-53deg);
     z-index: 4;
     box-shadow: -27px -109.5px 0 #f5fffa, -118px -107px 0 #f5fffa, -115.5px -102.5px 0 #f5fffa, -105.5px -109.5px 0 #f5fffa, -105px -109.5px 0 #f5fffa, -129px 166px 0 #F5FFfa, -107.5px 166px 0 #F5FFFA, -119px 161px 0 #F5FFFA;
+}
+.item_apple .dropdown-menu{
+    max-width: 100px;
+}
+button.entity_item_action{
+    display: block;
+    margin:3px auto;
+    width:90%;;
+}
+.item_apple_action {
+    /*background-color: #ffecec;*/
+    background-color: #d9534f;
+}
+.count_apple > .label-danger{
+    position: absolute;
+    left: 0;
+    z-index: 999;
+    top: 40px;
+    padding: 5px;
+}
+.count_apple input.has-error{
+    border:2px solid #d84f45;
+}
+.actions_entity .input-group button{
+    margin:0 7px;
+}
+@media(max-width:1080px) {
+    .actions_entity .input-group button{
+        margin:10px 7px 0 0;
+    }
 }

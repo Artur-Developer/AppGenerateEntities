@@ -22,6 +22,7 @@ class m200405_022801_create_apple_table extends Migration
             'date_show' => $this->integer()->notNull(),
             'date_down' => $this->integer(),
             'size' => $this->integer()->notNull()->defaultValue(100),
+            'batch' => $this->integer()->notNull(),
             'create_at' => $this->dateTime()->notNull()->defaultValue(new \yii\db\Expression('CURRENT_TIMESTAMP')),
             'update_at' => $this->dateTime()->notNull()->defaultValue(new \yii\db\Expression('CURRENT_TIMESTAMP'))." ON UPDATE CURRENT_TIMESTAMP",
         ]);

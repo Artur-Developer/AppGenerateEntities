@@ -3,7 +3,7 @@ namespace backend\models;
 
 use backend\models\interfaces\EntityInterface;
 use yii\base\InvalidArgumentException;
-use yii\db\Exception;
+use yii\base\Exception;
 use yii\helpers\ArrayHelper;
 
 abstract class Entities implements EntityInterface
@@ -14,6 +14,7 @@ abstract class Entities implements EntityInterface
 
     /**
      * Entities constructor.
+     * @param array $entities
      * @param string $entity
      * examples
      * $this->entities = [
@@ -21,10 +22,10 @@ abstract class Entities implements EntityInterface
      * ];
      * $this->entity = "Apple";
      */
-    public function __construct(string $entity)
+    public function __construct(array $entities, string $entity)
     {
-        $this->entities = [];
-        $this->entity = $this->entities[$entity];
+        $this->entities = $entities;
+        $this->entity = $this->checkEntityExists($entity);
     }
 
     /**
@@ -92,7 +93,21 @@ abstract class Entities implements EntityInterface
 
     public function getSize(): float
     {
-        return round($this->found_object->size / 100, 2);
+        return $this->found_object->size < 1 ? 0 : round($this->found_object->size / 100, 2);
+    }
+
+    public function getState(): int
+    {
+        return $this->found_object->state;
+    }
+
+    /**
+     * how much did you eat in percent
+     * @return int
+     */
+    public function getAte(): int
+    {
+        return round(100 - $this->found_object->size, 0) . "%";
     }
 
     /**
@@ -131,16 +146,19 @@ abstract class Entities implements EntityInterface
             throw new InvalidArgumentException('percent should be from 1 to 100');
         }
         if($this->found_object->state == SettingsType::getState(SettingsType::STATE_ON_TREE)){
-            throw new Exception('You can’t eat, an apple on a tree');
+            throw new Exception('You can’t eat, a fruit on a tree');
         }
-        if ($this->found_object->size !== 0){
-            $this->found_object->size -= $percent;
-            if ($this->found_object->size === 0){
-                $this->found_object->delete();
-            }
-            return $this->found_object->save();
+        if($this->found_object->state == SettingsType::getState(SettingsType::STATE_ROTTEN)){
+            throw new Exception('You can’t eat, a fruit is rotten');
         }
-        return false;
+        $this->found_object->size -= $percent;
+        $this->found_object->size = $this->found_object->size < 1 ? 0 : $this->found_object->size;
+        if ($this->found_object->size < 1){
+            $this->found_object->delete();
+        } else {
+            $this->found_object->save();
+        }
+        return true;
     }
 
     /**
@@ -151,6 +169,21 @@ abstract class Entities implements EntityInterface
     public function changeState(string $state)
     {
         $this->found_object->state = SettingsType::getState($state);
+        $state == SettingsType::STATE_ROTTEN ?: $this->found_object->date_down = time();
         return $this->found_object->save();
+    }
+
+    /**
+     * function check exists get entity
+     * @param string $entity
+     * @return object
+     */
+    private function checkEntityExists(string $entity): object
+    {
+        $entity = $this->entities[$entity];
+        if (!is_object($entity)) {
+            throw new InvalidArgumentException('Entity not found');
+        }
+        return $entity;
     }
 }

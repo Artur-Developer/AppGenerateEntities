@@ -22,7 +22,7 @@ class SettingsType extends \yii\db\ActiveRecord
     const PARAMS_STATE = 'state';
     const PARAMS_COLOR = 'color';
 
-    const ACTION_DOWN = 'down';
+    const ACTION_DROP = 'drop';
     const ACTION_ROTTEN = 'rotten';
     const ACTION_EAT = 'eat';
 
@@ -103,12 +103,37 @@ class SettingsType extends \yii\db\ActiveRecord
     public static function randTimeStamp(): int
     {
         $randomDate = new DateTime();
-        $randomDate->setTimestamp(time() - rand(10,1000));
+        $randomDate->setTimestamp(time() - rand(10,5000));
         return $randomDate->getTimestamp();
     }
 
     public static function randColor(array $colors): int
     {
         return $colors[array_rand($colors)]['id'];
+    }
+
+    /** return range colors from transfer $color
+     * @param string $color
+     * @return array
+     */
+    public static function getGradientFromColor(string $color): array
+    {
+        $gradient = [];
+        $c1 = intval($color[1]);
+        $c2 = intval($color[2]);
+        $next_color = intval($c1 . $c2);
+        $gradient[] = $color;
+        $format = '#%s'.substr($color,3);
+        if ($next_color < 50){
+            $color1 =  sprintf($format,$next_color - 5);
+            $color2 = sprintf($format,$next_color - 10);
+        } else {
+            $color1 = sprintf($format,abs($next_color + 15));
+            $color2 = sprintf($format,abs($next_color + 30));
+        }
+        $gradient[] =  $color1;
+        $gradient[] = $color2;
+
+        return $gradient;
     }
 }

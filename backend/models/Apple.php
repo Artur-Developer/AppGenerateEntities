@@ -67,12 +67,12 @@ class Apple extends \yii\db\ActiveRecord
         ];
     }
 
-    public function getColor()
+    public function get_color()
     {
         return $this->hasOne(SettingsType::className(), ['id' => 'color']);
     }
 
-    public function getState()
+    public function get_state()
     {
         return $this->hasOne(SettingsType::className(), ['id' => 'state']);
     }

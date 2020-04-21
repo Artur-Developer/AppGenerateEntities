@@ -30,6 +30,7 @@ class Generator
      * @param array $colors
      * @param int $count
      * @param int $state
+     * @param int $batch_id
      */
     public function __construct(object $entity, array $columns, array $colors, int $count,  int $state, int $batch_id = 0)
     {
