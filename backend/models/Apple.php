@@ -53,6 +53,7 @@ class Apple extends \yii\db\ActiveRecord
         ];
     }
 
+    /* Require method */
     public static function getEntityInfo(): array
     {
         return [
@@ -67,21 +68,19 @@ class Apple extends \yii\db\ActiveRecord
         ];
     }
 
+    /* Require method */
     public function get_color()
     {
         return $this->hasOne(SettingsType::className(), ['id' => 'color']);
     }
 
+    /* Require method */
     public function get_state()
     {
         return $this->hasOne(SettingsType::className(), ['id' => 'state']);
     }
 
-    public function getLastBatch(): int
-    {
-        return intval($this->find()->select('batch')->max('batch'));
-    }
-
+    /* Require method */
     public function buildInsert(int $batch_id, array $colors, int $state): array
     {
         return [

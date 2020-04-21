@@ -28,7 +28,7 @@ class EntityController extends Controller
                 ['state' => $state_rotten],
                 ['and',
                     ['=','state', $state_down],
-                    ['<=', 'date_show', $datetime->getTimestamp()]
+                    ['<=', 'date_down', $datetime->getTimestamp()]
                 ]);
             sleep(2);
         }
