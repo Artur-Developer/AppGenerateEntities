@@ -90,6 +90,22 @@ $this->registerJsFile('@web/js/jquery.mask.min.js', [
                             <span class="sr-only">Загрузка...</span>
                         </span>
                     </button>
+                    <button id="add_rottens" type="button" class="btn btn-warning" disabled>
+                        Испортить часть
+                        <span class="fa fa-gavel"></span>
+                        <span class="span_delete_loader" hidden>
+                            <i class="fa fa-cog fa-spin fa-fw" ></i>
+                            <span class="sr-only">Загрузка...</span>
+                        </span>
+                    </button>
+                    <button id="check_rotten" type="button" class="btn btn-success" disabled>
+                        Проверить испорченность
+                        <span class="fa fa-clock-o"></span>
+                        <span class="span_delete_loader" hidden>
+                            <i class="fa fa-cog fa-spin fa-fw" ></i>
+                            <span class="sr-only">Загрузка...</span>
+                        </span>
+                    </button>
                 <?php endif;?>
             </div>
         </div>
